@@ -14,7 +14,8 @@ class MyHandler implements HttpHandler {
     public void handle(HttpExchange t) throws IOException {
         String requestUrl = t.getRequestURI().getPath();
         String response = null;
-        Method[] methods = this.getClass().getMethods();
+        RouteHandler routeHandler = new RouteHandler();
+        Method[] methods = routeHandler.getClass().getMethods();
 
         for (Method method : methods) {
             Annotation[] annotations = method.getDeclaredAnnotations();
@@ -26,7 +27,7 @@ class MyHandler implements HttpHandler {
                     if (((WebRoute) annotation).value().equals(requestUrl)
                             && ((WebRoute) annotation).method().equals((t.getRequestMethod()))) {
                         try {
-                            response = (String) method.invoke(this, t);
+                            response = (String) method.invoke(routeHandler, t);
                             break;
                         } catch (IllegalAccessException e) {
                             e.printStackTrace();
@@ -49,16 +50,6 @@ class MyHandler implements HttpHandler {
         OutputStream os = t.getResponseBody();
         os.write(response.getBytes());
         os.close();
-    }
-
-    @WebRoute("/test")
-    public String testOne(com.sun.net.httpserver.HttpExchange t) {
-        return "This is a test page!";
-    }
-
-    @WebRoute("/another-test")
-    public String testTwo(com.sun.net.httpserver.HttpExchange t) {
-        return "Another test page!";
     }
 
 }
